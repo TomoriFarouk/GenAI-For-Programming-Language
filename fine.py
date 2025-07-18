@@ -211,15 +211,18 @@ Feedback:"""
         }
 
     def load_model(self):
-        """Load the fine-tuned model and tokenizer using optimized settings"""
+        """
+        Load the fine-tuned model and tokenizer optimized for HF Spaces
+        """
         try:
-            logger.info(f"Loading fine-tuned model from {self.model_path}")
+            # Get HF token for private model access
+            hf_token = os.getenv("HF_TOKEN", None)
 
-            # Load tokenizer with proper settings
+            logger.info("Loading tokenizer...")
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_path,
-                use_fast=True,
-                padding_side="right"
+                trust_remote_code=True,
+                token=hf_token  # Use token for private models
             )
 
             # Set padding token
@@ -238,7 +241,8 @@ Feedback:"""
                 device_map=None,  # Force CPU for HF Spaces
                 low_cpu_mem_usage=True,
                 trust_remote_code=True,
-                offload_folder="offload"  # Offload to disk if needed
+                offload_folder="offload",  # Offload to disk if needed
+                token=hf_token  # Use token for private models
             )
             # Enable gradient checkpointing for memory savings
             self.model.gradient_checkpointing_enable()

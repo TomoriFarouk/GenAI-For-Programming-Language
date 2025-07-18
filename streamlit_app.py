@@ -4,9 +4,6 @@ Comprehensive Educational Feedback System
 """
 
 import json
-from fine import ProgrammingEducationAI, ComprehensiveFeedback
-import streamlit as st
-import torch
 import os
 import gc
 import warnings
@@ -21,6 +18,17 @@ os.environ["DATASETS_DISABLE_MULTIPROCESSING"] = "1"
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
     gc.collect()
+
+# Try to import the fine-tuned model components
+try:
+    from fine import ProgrammingEducationAI, ComprehensiveFeedback
+    MODEL_AVAILABLE = True
+except Exception as e:
+    st.warning(f"⚠️ Could not import fine-tuned model components: {e}")
+    MODEL_AVAILABLE = False
+
+# Get HF token for private model access
+HF_TOKEN = os.getenv("HF_TOKEN", None)
 
 
 def main():
@@ -125,6 +133,16 @@ def generate_feedback(code: str, student_level: str, model_option: str):
                             # Use Hugging Face Model Hub instead of local files
                             # Replace with your actual model name
                             model_path = "TomoriFarouk/codellama-7b-programming-education"
+
+                            # Check if we have HF token for private model
+                            if HF_TOKEN:
+                                st.info(
+                                    "🔐 Using private model with authentication...")
+                                # The model will use the HF_TOKEN environment variable automatically
+                            else:
+                                st.warning(
+                                    "⚠️ No HF token found - model must be public or token must be set")
+
                             ai_tutor = ProgrammingEducationAI(model_path)
                             ai_tutor.load_model()
                             st.session_state['ai_tutor'] = ai_tutor

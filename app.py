@@ -14,6 +14,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 # Environment setup for HF Spaces
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
 os.environ["DATASETS_DISABLE_MULTIPROCESSING"] = "1"
 
 # Clear CUDA cache if available
@@ -40,51 +41,51 @@ def main():
 
         # Model selection
         model_option = st.selectbox(
-            "Model Selection",
-            ["Use Fine-tuned Model", "Demo Mode (No Model)"],
-            help="Choose whether to load the fine-tuned model or use demo mode"
+            "Choose Model:",
+            ["Use Demo Mode", "Use Fine-tuned Model"],
+            help="Demo mode works immediately. Fine-tuned model requires loading (5-10 minutes on HF Spaces)."
         )
 
         # Student level selection
         student_level = st.selectbox(
-            "Student Level",
+            "Student Level:",
             ["beginner", "intermediate", "advanced"],
-            index=0,
-            help="Select the student's skill level for personalized feedback"
+            help="Adjusts feedback complexity and learning objectives"
         )
 
-        # Load model button
-        if model_option == "Use Fine-tuned Model":
-            load_model = st.button("🚀 Load Fine-tuned Model", type="primary")
+        # Memory info for HF Spaces
+        if st.checkbox("Show System Info"):
+            import psutil
+            memory = psutil.virtual_memory()
+            st.metric("Available RAM",
+                      f"{memory.available / (1024**3):.1f} GB")
+            st.metric("RAM Usage", f"{memory.percent}%")
+            st.metric("CPU Cores", psutil.cpu_count())
 
-            if load_model:
-                with st.spinner("Loading fine-tuned model (this may take 5-10 minutes)..."):
-                    try:
-                        # Initialize AI tutor with your fine-tuned model
-                        model_path = r"C:\Users\farou\OneDrive - Aston University\finetunning"
-                        ai_tutor = ProgrammingEducationAI(model_path)
-                        ai_tutor.load_model()
-                        st.session_state['ai_tutor'] = ai_tutor
-                        st.success("✅ Fine-tuned model loaded successfully!")
-                    except Exception as e:
-                        st.error(f"❌ Error loading model: {e}")
-                        st.info("💡 Switching to demo mode...")
-                        st.session_state['demo_mode'] = True
-        else:
-            st.session_state['demo_mode'] = True
-            st.info("🎭 Demo mode active - using sample feedback")
+        # HF Spaces specific instructions
+        st.markdown("---")
+        st.markdown("### 🚀 Hugging Face Spaces")
+        st.info("""
+        **Hardware**: 2 vCPU, 16GB RAM (FREE)
+        
+        **Recommendations**:
+        - Use Demo Mode for quick testing
+        - Fine-tuned model takes 5-10 minutes to load
+        - 16GB RAM is sufficient for your model
+        """)
 
     # Main content area
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        st.header("📝 Student Code")
+        st.header("📝 Student Code Input")
 
         # Code input
         student_code = st.text_area(
-            "Enter your code here:",
-            height=400,
-            placeholder="""def find_duplicates(numbers):
+            "Paste your Python code here:",
+            height=300,
+            placeholder="""# Example code to test:
+def find_duplicates(numbers):
     x = []
     for i in range(len(numbers)):
         for j in range(i+1, len(numbers)):
@@ -103,7 +104,7 @@ print(result)""",
             if not student_code.strip():
                 st.warning("⚠️ Please enter some code first!")
             else:
-                generate_feedback(student_code, student_level)
+                generate_feedback(student_code, student_level, model_option)
 
     with col2:
         st.header("📊 Feedback Results")
@@ -112,16 +113,38 @@ print(result)""",
             display_feedback(st.session_state['feedback'])
 
 
-def generate_feedback(code: str, student_level: str):
+def generate_feedback(code: str, student_level: str, model_option: str):
     """Generate comprehensive feedback using the AI tutor or demo mode"""
     with st.spinner("🤖 Analyzing your code..."):
         try:
-            if 'ai_tutor' in st.session_state:
-                # Use fine-tuned model
-                feedback = st.session_state['ai_tutor'].generate_comprehensive_feedback(
-                    code, student_level)
-                st.session_state['feedback'] = feedback
-                st.success("✅ Feedback generated using fine-tuned model!")
+            if model_option == "Use Fine-tuned Model":
+                # Check if model is already loaded
+                if 'ai_tutor' not in st.session_state:
+                    with st.spinner("🚀 Loading fine-tuned model (this may take 5-10 minutes on HF Spaces)..."):
+                        try:
+                            # Use relative path for HF Spaces
+                            model_path = "./model"  # Will be updated when model is uploaded
+                            ai_tutor = ProgrammingEducationAI(model_path)
+                            ai_tutor.load_model()
+                            st.session_state['ai_tutor'] = ai_tutor
+                            st.success(
+                                "✅ Fine-tuned model loaded successfully!")
+                        except Exception as e:
+                            st.error(f"❌ Error loading model: {e}")
+                            st.info("💡 Switching to demo mode...")
+                            model_option = "Use Demo Mode"
+
+                if 'ai_tutor' in st.session_state:
+                    # Use fine-tuned model
+                    feedback = st.session_state['ai_tutor'].generate_comprehensive_feedback(
+                        code, student_level)
+                    st.session_state['feedback'] = feedback
+                    st.success("✅ Feedback generated using fine-tuned model!")
+                else:
+                    # Fallback to demo mode
+                    feedback = create_demo_feedback(code, student_level)
+                    st.session_state['feedback'] = feedback
+                    st.success("✅ Demo feedback generated as fallback!")
             else:
                 # Demo mode
                 feedback = create_demo_feedback(code, student_level)

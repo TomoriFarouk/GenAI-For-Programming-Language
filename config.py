@@ -8,7 +8,7 @@ from pathlib import Path
 # Model Configuration
 MODEL_CONFIG = {
     # Path to your fine-tuned CodeLlama-7B model
-    "model_path": r"C:\Users\farou\OneDrive - Aston University\finetunning",
+    "model_path": "./model",  # For Hugging Face Spaces deployment
 
     # Model generation parameters
     "max_new_tokens": 512,

@@ -135,7 +135,7 @@ class ProgrammingEducationAI:
     Main class for the fine-tuned CodeLlama model for programming education
     """
 
-    def __init__(self, model_path: str = r"C:\Users\farou\OneDrive - Aston University\finetunning"):
+    def __init__(self, model_path: str = "./model"):
         """
         Initialize the fine-tuned model and tokenizer
 
@@ -163,7 +163,7 @@ Student Level: {level}
 
 Please provide:
 1. Syntax errors (if any)
-2. Logic errors (if any) 
+2. Logic errors (if any)
 3. Style improvements
 4. Optimization suggestions
 5. Educational explanations
@@ -230,29 +230,18 @@ Feedback:"""
             logger.info(
                 f"Tokenizer loaded - Vocab size: {len(self.tokenizer)}")
 
-            # Load model with CPU-optimized settings
-            if torch.cuda.is_available():
-                # GPU loading
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_path,
-                    torch_dtype=torch.float32,
-                    device_map="auto",
-                    low_cpu_mem_usage=True,
-                    trust_remote_code=True
-                )
-                # Enable gradient checkpointing for memory savings
-                self.model.gradient_checkpointing_enable()
-            else:
-                # CPU loading with memory optimization
-                print("Loading model on CPU - this may take a while...")
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_path,
-                    torch_dtype=torch.float32,
-                    device_map=None,  # Force CPU
-                    low_cpu_mem_usage=True,
-                    trust_remote_code=True,
-                    offload_folder="offload"  # Offload to disk if needed
-                )
+                # Load model optimized for HF Spaces (16GB RAM, 2 vCPU)
+    print("Loading model optimized for HF Spaces (16GB RAM, 2 vCPU)...")
+    self.model = AutoModelForCausalLM.from_pretrained(
+        self.model_path,
+        torch_dtype=torch.float32,
+        device_map=None,  # Force CPU for HF Spaces
+        low_cpu_mem_usage=True,
+        trust_remote_code=True,
+        offload_folder="offload"  # Offload to disk if needed
+    )
+    # Enable gradient checkpointing for memory savings
+    self.model.gradient_checkpointing_enable()
 
             logger.info("Fine-tuned model loaded successfully")
             logger.info(f"Model loaded on devices: {self.model.hf_device_map}")

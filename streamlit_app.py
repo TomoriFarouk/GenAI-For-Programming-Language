@@ -122,8 +122,9 @@ def generate_feedback(code: str, student_level: str, model_option: str):
                 if 'ai_tutor' not in st.session_state:
                     with st.spinner("🚀 Loading fine-tuned model (this may take 5-10 minutes on HF Spaces)..."):
                         try:
-                            # Use relative path for HF Spaces
-                            model_path = "./model"  # Will be updated when model is uploaded
+                            # Use Hugging Face Model Hub instead of local files
+                            # Replace with your actual model name
+                            model_path = "TomoriFarouk/codellama-7b-programming-education"
                             ai_tutor = ProgrammingEducationAI(model_path)
                             ai_tutor.load_model()
                             st.session_state['ai_tutor'] = ai_tutor

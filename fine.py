@@ -135,7 +135,7 @@ class ProgrammingEducationAI:
     Main class for the fine-tuned CodeLlama model for programming education
     """
 
-    def __init__(self, model_path: str = "./model"):
+    def __init__(self, model_path: str = "TomoriFarouk/codellama-7b-programming-education"):
         """
         Initialize the fine-tuned model and tokenizer
 

@@ -1,116 +1,52 @@
+"""
+AI Programming Tutor - Hugging Face Spaces Deployment
+Comprehensive Educational Feedback System
+"""
+
+import json
+from fine import ProgrammingEducationAI, ComprehensiveFeedback
 import streamlit as st
+import torch
 import os
 import gc
-import torch
-import sys
-import traceback
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
-# Set page config for better HF Spaces experience
-st.set_page_config(
-    page_title="AI Programming Tutor",
-    page_icon="🎓",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Optimize for HF Spaces environment
+# Environment setup for HF Spaces
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
 os.environ["DATASETS_DISABLE_MULTIPROCESSING"] = "1"
 
-# Clear memory on startup
+# Clear CUDA cache if available
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
-gc.collect()
-
-# Try to import the fine-tuned model components
-try:
-    from fine import ProgrammingEducationAI, ComprehensiveFeedback
-    MODEL_AVAILABLE = True
-except Exception as e:
-    st.warning(f"⚠️ Could not import fine-tuned model components: {e}")
-    MODEL_AVAILABLE = False
-
-
-def create_demo_feedback(code: str, student_level: str):
-    """Create demo feedback for testing without model"""
-    return {
-        "code_snippet": code,
-        "student_level": student_level,
-        "strengths": [
-            "Your code has a clear structure and logic",
-            "You're using appropriate Python syntax",
-            "The function name is descriptive"
-        ],
-        "weaknesses": [
-            "Variable names could be more descriptive",
-            "Missing comments explaining the logic",
-            "Could benefit from error handling"
-        ],
-        "issues": [
-            "Using generic variable names (x, i, j)",
-            "No input validation",
-            "Nested loops could be optimized"
-        ],
-        "step_by_step_improvement": [
-            "Step 1: Replace 'x' with 'duplicates' for better readability",
-            "Step 2: Add comments explaining the nested loop logic",
-            "Step 3: Consider using a set for O(n) time complexity",
-            "Step 4: Add input validation for edge cases"
-        ],
-        "learning_points": [
-            "Good variable naming improves code readability and maintainability",
-            "Comments help others (and yourself) understand complex logic",
-            "Algorithm complexity matters - O(n²) vs O(n) can make a huge difference",
-            "Always consider edge cases and input validation"
-        ],
-        "review_summary": "Your code works correctly but could be improved with better naming, comments, and optimization. The logic is sound for a beginner level.",
-        "comprehension_question": "What is the time complexity of your current algorithm and how could you improve it?",
-        "comprehension_answer": "The current algorithm has O(n²) time complexity due to nested loops. It could be improved to O(n) using a hash set.",
-        "explanation": "Nested loops multiply their complexities. Using a set allows us to check for duplicates in O(1) time per element.",
-        "improved_code": """def find_duplicates(numbers):
-    # Use a set for O(n) time complexity
-    duplicates = []
-    seen = set()
-    
-    for num in numbers:
-        if num in seen:
-            duplicates.append(num)
-        else:
-            seen.add(num)
-    
-    return duplicates
-
-# Test the function
-result = find_duplicates([1, 2, 3, 2, 4, 5, 3])
-print(result)""",
-        "fix_explanation": "The improved version uses a set to track seen numbers, reducing time complexity from O(n²) to O(n) and making the code more readable with better variable names.",
-        "difficulty_level": student_level,
-        "learning_objectives": ["algorithm_complexity", "code_readability", "best_practices"],
-        "estimated_time_to_improve": "10-15 minutes"
-    }
+    gc.collect()
 
 
 def main():
+    st.set_page_config(
+        page_title="AI Programming Tutor",
+        page_icon="🎓",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+
     st.title("🎓 AI Programming Tutor")
-    st.markdown("### Generative AI for Enhanced Programming Education")
+    st.subheader("Comprehensive Educational Feedback System")
+    st.markdown("---")
 
     # Sidebar configuration
     with st.sidebar:
         st.header("⚙️ Configuration")
 
-        # Model selection with HF Spaces optimization
-        if MODEL_AVAILABLE:
-            model_option = st.selectbox(
-                "Choose Model:",
-                ["Use Demo Mode", "Use Fine-tuned Model"],
-                help="Demo mode works immediately. Fine-tuned model requires loading (5-10 minutes on HF Spaces)."
-            )
-        else:
-            model_option = "Use Demo Mode"
-            st.warning(
-                "⚠️ Fine-tuned model not available - using demo mode only")
+        # Model selection
+        model_option = st.selectbox(
+            "Choose Model:",
+            ["Use Demo Mode", "Use Fine-tuned Model"],
+            help="Demo mode works immediately. Fine-tuned model requires loading (5-10 minutes on HF Spaces)."
+        )
 
+        # Student level selection
         student_level = st.selectbox(
             "Student Level:",
             ["beginner", "intermediate", "advanced"],
@@ -119,15 +55,12 @@ def main():
 
         # Memory info for HF Spaces
         if st.checkbox("Show System Info"):
-            try:
-                import psutil
-                memory = psutil.virtual_memory()
-                st.metric("Available RAM",
-                          f"{memory.available / (1024**3):.1f} GB")
-                st.metric("RAM Usage", f"{memory.percent}%")
-                st.metric("CPU Cores", psutil.cpu_count())
-            except:
-                st.info("System info not available")
+            import psutil
+            memory = psutil.virtual_memory()
+            st.metric("Available RAM",
+                      f"{memory.available / (1024**3):.1f} GB")
+            st.metric("RAM Usage", f"{memory.percent}%")
+            st.metric("CPU Cores", psutil.cpu_count())
 
         # HF Spaces specific instructions
         st.markdown("---")
@@ -147,6 +80,7 @@ def main():
     with col1:
         st.header("📝 Student Code Input")
 
+        # Code input
         student_code = st.text_area(
             "Paste your Python code here:",
             height=300,
@@ -183,7 +117,7 @@ def generate_feedback(code: str, student_level: str, model_option: str):
     """Generate comprehensive feedback using the AI tutor or demo mode"""
     with st.spinner("🤖 Analyzing your code..."):
         try:
-            if model_option == "Use Fine-tuned Model" and MODEL_AVAILABLE:
+            if model_option == "Use Fine-tuned Model":
                 # Check if model is already loaded
                 if 'ai_tutor' not in st.session_state:
                     with st.spinner("🚀 Loading fine-tuned model (this may take 5-10 minutes on HF Spaces)..."):
@@ -218,14 +152,73 @@ def generate_feedback(code: str, student_level: str, model_option: str):
                 st.success("✅ Demo feedback generated!")
         except Exception as e:
             st.error(f"❌ Error generating feedback: {e}")
-            st.error(f"Traceback: {traceback.format_exc()}")
             # Fallback to demo mode
             feedback = create_demo_feedback(code, student_level)
             st.session_state['feedback'] = feedback
             st.success("✅ Demo feedback generated as fallback!")
 
 
-def display_feedback(feedback):
+def create_demo_feedback(code: str, student_level: str) -> ComprehensiveFeedback:
+    """Create demo feedback for testing without model"""
+    return ComprehensiveFeedback(
+        code_snippet=code,
+        student_level=student_level,
+        strengths=[
+            "Your code has a clear structure and logic",
+            "You're using appropriate Python syntax",
+            "The function name is descriptive"
+        ],
+        weaknesses=[
+            "Variable names could be more descriptive",
+            "Missing comments explaining the logic",
+            "Could benefit from error handling"
+        ],
+        issues=[
+            "Using generic variable names (x, i, j)",
+            "No input validation",
+            "Nested loops could be optimized"
+        ],
+        step_by_step_improvement=[
+            "Step 1: Replace 'x' with 'duplicates' for better readability",
+            "Step 2: Add comments explaining the nested loop logic",
+            "Step 3: Consider using a set for O(n) time complexity",
+            "Step 4: Add input validation for edge cases"
+        ],
+        learning_points=[
+            "Good variable naming improves code readability and maintainability",
+            "Comments help others (and yourself) understand complex logic",
+            "Algorithm complexity matters - O(n²) vs O(n) can make a huge difference",
+            "Always consider edge cases and input validation"
+        ],
+        review_summary="Your code works correctly but could be improved with better naming, comments, and optimization. The logic is sound for a beginner level.",
+        comprehension_question="What is the time complexity of your current algorithm and how could you improve it?",
+        comprehension_answer="The current algorithm has O(n²) time complexity due to nested loops. It could be improved to O(n) using a hash set.",
+        explanation="Nested loops multiply their complexities. Using a set allows us to check for duplicates in O(1) time per element.",
+        improved_code="""def find_duplicates(numbers):
+    # Use a set for O(n) time complexity
+    duplicates = []
+    seen = set()
+    
+    for num in numbers:
+        if num in seen:
+            duplicates.append(num)
+        else:
+            seen.add(num)
+    
+    return duplicates
+
+# Test the function
+result = find_duplicates([1, 2, 3, 2, 4, 5, 3])
+print(result)""",
+        fix_explanation="The improved version uses a set to track seen numbers, reducing time complexity from O(n²) to O(n) and making the code more readable with better variable names.",
+        difficulty_level=student_level,
+        learning_objectives=["algorithm_complexity",
+                             "code_readability", "best_practices"],
+        estimated_time_to_improve="10-15 minutes"
+    )
+
+
+def display_feedback(feedback: ComprehensiveFeedback):
     """Display comprehensive feedback in a progressive learning flow"""
 
     # Initialize session state for tracking progress
@@ -258,21 +251,21 @@ def display_feedback(feedback):
 
         with col1:
             st.markdown("#### ✅ Strengths")
-            for i, strength in enumerate(feedback['strengths'], 1):
+            for i, strength in enumerate(feedback.strengths, 1):
                 st.markdown(f"**{i}.** {strength}")
 
         with col2:
             st.markdown("#### ❌ Weaknesses")
-            for i, weakness in enumerate(feedback['weaknesses'], 1):
+            for i, weakness in enumerate(feedback.weaknesses, 1):
                 st.markdown(f"**{i}.** {weakness}")
 
         with col3:
             st.markdown("#### ⚠️ Issues")
-            for i, issue in enumerate(feedback['issues'], 1):
+            for i, issue in enumerate(feedback.issues, 1):
                 st.markdown(f"**{i}.** {issue}")
 
         st.markdown("#### 📋 Review Summary")
-        st.info(feedback['review_summary'])
+        st.info(feedback.review_summary)
 
         if st.session_state['current_step'] == 1:
             if st.button("✅ I understand the analysis - Continue to Step 2", type="primary"):
@@ -285,12 +278,12 @@ def display_feedback(feedback):
         st.markdown("### 📝 Step 2: Improvement Guide")
 
         st.markdown("#### Step-by-Step Instructions")
-        for i, step in enumerate(feedback['step_by_step_improvement'], 1):
+        for i, step in enumerate(feedback.step_by_step_improvement, 1):
             st.markdown(f"**Step {i}:** {step}")
 
         st.markdown("---")
         st.markdown(
-            f"**⏱️ Estimated time to improve:** {feedback['estimated_time_to_improve']}")
+            f"**⏱️ Estimated time to improve:** {feedback.estimated_time_to_improve}")
 
         if st.session_state['current_step'] == 2:
             if st.button("✅ I understand the improvement steps - Continue to Step 3", type="primary"):
@@ -303,12 +296,12 @@ def display_feedback(feedback):
         st.markdown("### 🎓 Step 3: Learning Points")
 
         st.markdown("#### Key Concepts to Understand")
-        for i, point in enumerate(feedback['learning_points'], 1):
+        for i, point in enumerate(feedback.learning_points, 1):
             st.markdown(f"**{i}.** {point}")
 
         st.markdown("---")
         st.markdown("#### 🎯 Learning Objectives")
-        for objective in feedback['learning_objectives']:
+        for objective in feedback.learning_objectives:
             st.markdown(f"• {objective}")
 
         if st.session_state['current_step'] == 3:
@@ -323,7 +316,7 @@ def display_feedback(feedback):
 
         st.markdown(
             "**Before you see the solution, let's test your understanding:**")
-        st.markdown(f"**Question:** {feedback['comprehension_question']}")
+        st.markdown(f"**Question:** {feedback.comprehension_question}")
 
         # Quiz interface
         user_answer = st.text_area(
@@ -336,9 +329,9 @@ def display_feedback(feedback):
         if st.button("Check My Answer", type="primary"):
             if user_answer.strip():
                 st.markdown("**Correct Answer:**")
-                st.success(feedback['comprehension_answer'])
+                st.success(feedback.comprehension_answer)
                 st.markdown("**Explanation:**")
-                st.info(feedback['explanation'])
+                st.info(feedback.explanation)
 
                 if not st.session_state['quiz_completed']:
                     st.session_state['quiz_completed'] = True
@@ -356,10 +349,10 @@ def display_feedback(feedback):
             "🎉 **Congratulations! You've completed the learning process. Here's the improved version:**")
 
         st.markdown("#### 🔧 Enhanced Version")
-        st.code(feedback['improved_code'], language="python")
+        st.code(feedback.improved_code, language="python")
 
         st.markdown("#### 💡 What Changed")
-        st.info(feedback['fix_explanation'])
+        st.info(feedback.fix_explanation)
 
         # Reset button for new analysis
         if st.button("🔄 Analyze New Code", type="secondary"):
@@ -373,11 +366,11 @@ def display_feedback(feedback):
     st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Student Level", feedback['student_level'].title())
+        st.metric("Student Level", feedback.student_level.title())
     with col2:
-        st.metric("Learning Objectives", len(feedback['learning_objectives']))
+        st.metric("Learning Objectives", len(feedback.learning_objectives))
     with col3:
-        st.metric("Issues Found", len(feedback['issues']))
+        st.metric("Issues Found", len(feedback.issues))
 
 
 if __name__ == "__main__":

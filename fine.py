@@ -230,18 +230,18 @@ Feedback:"""
             logger.info(
                 f"Tokenizer loaded - Vocab size: {len(self.tokenizer)}")
 
-                # Load model optimized for HF Spaces (16GB RAM, 2 vCPU)
-    print("Loading model optimized for HF Spaces (16GB RAM, 2 vCPU)...")
-    self.model = AutoModelForCausalLM.from_pretrained(
-        self.model_path,
-        torch_dtype=torch.float32,
-        device_map=None,  # Force CPU for HF Spaces
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-        offload_folder="offload"  # Offload to disk if needed
-    )
-    # Enable gradient checkpointing for memory savings
-    self.model.gradient_checkpointing_enable()
+            # Load model optimized for HF Spaces (16GB RAM, 2 vCPU)
+            print("Loading model optimized for HF Spaces (16GB RAM, 2 vCPU)...")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                torch_dtype=torch.float32,
+                device_map=None,  # Force CPU for HF Spaces
+                low_cpu_mem_usage=True,
+                trust_remote_code=True,
+                offload_folder="offload"  # Offload to disk if needed
+            )
+            # Enable gradient checkpointing for memory savings
+            self.model.gradient_checkpointing_enable()
 
             logger.info("Fine-tuned model loaded successfully")
             logger.info(f"Model loaded on devices: {self.model.hf_device_map}")

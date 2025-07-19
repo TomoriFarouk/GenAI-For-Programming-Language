@@ -104,8 +104,18 @@ def main():
         if MODEL_AVAILABLE:
             st.success("✅ Fine-tuned model available")
             st.success("🌐 Using public model - no authentication required")
+
+            # Show current model path
+            st.info(f"📁 Model path: FaroukTomori/codellama-7b-programming-education")
+
+            # Show if model is loaded in session
+            if 'ai_tutor' in st.session_state:
+                st.success("✅ Model loaded in session")
+            else:
+                st.info("⏳ Model not loaded yet - will load when you analyze code")
         else:
             st.error("❌ Fine-tuned model not available")
+            st.error("🔍 Check the import error above to fix the issue")
 
     # Main content
     st.markdown("---")
@@ -138,26 +148,45 @@ def main():
                                 st.info(
                                     "🌐 Using public model - no authentication required")
 
+                                st.info(
+                                    f"🔍 Attempting to load model from: {model_path}")
+
                                 ai_tutor = ProgrammingEducationAI(model_path)
+                                st.success(
+                                    "✅ Model class instantiated successfully")
+
                                 ai_tutor.load_model()
                                 st.session_state['ai_tutor'] = ai_tutor
                                 st.success(
                                     "✅ Fine-tuned model loaded successfully!")
                             except Exception as e:
                                 st.error(f"❌ Error loading model: {e}")
-                                st.info("💡 Switching to demo mode...")
-                                model_option = "Use Demo Mode"
+                                st.error("🔍 Full error details:")
+                                st.code(str(e), language="text")
+                                st.info(
+                                    "💡 Check the error above to fix the model loading issue")
+                                return  # Stop here and show the error
 
                     if 'ai_tutor' in st.session_state:
                         # Use fine-tuned model
-                        feedback = st.session_state['ai_tutor'].generate_comprehensive_feedback(
-                            code_input, student_level)
-                        st.success(
-                            "✅ Feedback generated using fine-tuned model!")
+                        try:
+                            feedback = st.session_state['ai_tutor'].generate_comprehensive_feedback(
+                                code_input, student_level)
+                            st.success(
+                                "✅ Feedback generated using fine-tuned model!")
+                        except Exception as e:
+                            st.error(f"❌ Error generating feedback: {e}")
+                            st.error("🔍 Full error details:")
+                            st.code(str(e), language="text")
+                            st.info(
+                                "💡 Check the error above to fix the feedback generation issue")
+                            return
                     else:
-                        # Fallback to demo mode
-                        feedback = demo_feedback(code_input)
-                        st.success("✅ Demo feedback generated as fallback!")
+                        # Model failed to load - show error instead of falling back
+                        st.error(
+                            "❌ Model failed to load - cannot generate feedback")
+                        st.info("💡 Fix the model loading error above first")
+                        return
                 else:
                     # Demo mode
                     feedback = demo_feedback(code_input)
@@ -240,7 +269,9 @@ def main():
 
             except Exception as e:
                 st.error(f"❌ Error during analysis: {e}")
-                st.info("💡 Try using demo mode or check your code input")
+                st.error("🔍 Full error details:")
+                st.code(str(e), language="text")
+                st.info("💡 Check the error above to understand what went wrong")
 
 
 if __name__ == "__main__":

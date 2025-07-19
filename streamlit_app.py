@@ -1,6 +1,7 @@
 """
 AI Programming Tutor - Full Version with Fine-tuned Model Support
 Works on Hugging Face Spaces with fallback to demo mode
+Version: 2.0 - No Demo Fallback, Shows Detailed Errors
 """
 
 import streamlit as st

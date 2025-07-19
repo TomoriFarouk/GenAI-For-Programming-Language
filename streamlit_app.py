@@ -24,40 +24,7 @@ except Exception as e:
 HF_TOKEN = None  # Set to None for public model
 
 
-def demo_feedback(code_input):
-    """Provide demo feedback when model is not available"""
-    return {
-        "strengths": [
-            "Good code structure and formatting",
-            "Clear variable naming",
-            "Appropriate use of comments"
-        ],
-        "weaknesses": [
-            "Could benefit from more error handling",
-            "Consider adding input validation",
-            "Documentation could be more comprehensive"
-        ],
-        "issues": [
-            "Missing edge case handling",
-            "No input validation present"
-        ],
-        "improvements": [
-            "Add try-catch blocks for error handling",
-            "Implement input validation",
-            "Add comprehensive documentation"
-        ],
-        "learning_points": [
-            "Error handling is crucial for robust code",
-            "Input validation prevents unexpected behavior",
-            "Good documentation helps with code maintenance"
-        ],
-        "comprehension_questions": [
-            "What happens if the user enters invalid input?",
-            "How would you handle exceptions in this code?",
-            "What are the benefits of input validation?"
-        ],
-        "code_fix": f"# Improved version of your code:\n{code_input}\n\n# Add error handling and validation here"
-    }
+# Demo feedback function removed - app now shows actual errors instead of falling back to demo
 
 
 def main():
@@ -188,11 +155,18 @@ def main():
                         st.info("💡 Fix the model loading error above first")
                         return
                 else:
-                    # Demo mode
-                    feedback = demo_feedback(code_input)
-                    st.success("✅ Demo feedback generated!")
+                    # Model not available or not selected - show error
+                    if not MODEL_AVAILABLE:
+                        st.error("❌ Fine-tuned model components not available")
+                        st.error("🔍 Check the import error in the sidebar")
+                        return
+                    else:
+                        st.error(
+                            "❌ Please select 'Use Fine-tuned Model' to analyze with AI")
+                        st.info("💡 The model is available but not selected")
+                        return
 
-                # Display feedback in tabs
+                # Display AI feedback in tabs
                 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
                     "✅ Strengths", "❌ Weaknesses", "🚨 Issues",
                     "📈 Improvements", "🎓 Learning", "❓ Questions", "🔧 Code Fix"
@@ -200,69 +174,41 @@ def main():
 
                 with tab1:
                     st.subheader("✅ Code Strengths")
-                    if isinstance(feedback, dict):
-                        for strength in feedback["strengths"]:
-                            st.markdown(f"• {strength}")
-                    else:
-                        for strength in feedback.strengths:
-                            st.markdown(f"• {strength}")
+                    for strength in feedback.strengths:
+                        st.markdown(f"• {strength}")
 
                 with tab2:
                     st.subheader("❌ Areas for Improvement")
-                    if isinstance(feedback, dict):
-                        for weakness in feedback["weaknesses"]:
-                            st.markdown(f"• {weakness}")
-                    else:
-                        for weakness in feedback.weaknesses:
-                            st.markdown(f"• {weakness}")
+                    for weakness in feedback.weaknesses:
+                        st.markdown(f"• {weakness}")
 
                 with tab3:
                     st.subheader("🚨 Issues to Address")
-                    if isinstance(feedback, dict):
-                        for issue in feedback["issues"]:
-                            st.markdown(f"• {issue}")
-                    else:
-                        for issue in feedback.issues:
-                            st.markdown(f"• {issue}")
+                    for issue in feedback.issues:
+                        st.markdown(f"• {issue}")
 
                 with tab4:
                     st.subheader("📈 Step-by-Step Improvements")
-                    if isinstance(feedback, dict):
-                        for i, improvement in enumerate(feedback["improvements"], 1):
-                            st.markdown(f"{i}. {improvement}")
-                    else:
-                        for i, step in enumerate(feedback.step_by_step_improvement, 1):
-                            st.markdown(f"**Step {i}:** {step}")
+                    for i, step in enumerate(feedback.step_by_step_improvement, 1):
+                        st.markdown(f"**Step {i}:** {step}")
 
                 with tab5:
                     st.subheader("🎓 Key Learning Points")
-                    if isinstance(feedback, dict):
-                        for point in feedback["learning_points"]:
-                            st.markdown(f"• {point}")
-                    else:
-                        for point in feedback.learning_points:
-                            st.markdown(f"• {point}")
+                    for point in feedback.learning_points:
+                        st.markdown(f"• {point}")
 
                 with tab6:
                     st.subheader("❓ Comprehension Questions")
-                    if isinstance(feedback, dict):
-                        for i, question in enumerate(feedback["comprehension_questions"], 1):
-                            st.markdown(f"**Q{i}:** {question}")
-                    else:
-                        st.markdown(
-                            f"**Question:** {feedback.comprehension_question}")
-                        st.markdown(
-                            f"**Answer:** {feedback.comprehension_answer}")
-                        st.markdown(f"**Explanation:** {feedback.explanation}")
+                    st.markdown(
+                        f"**Question:** {feedback.comprehension_question}")
+                    st.markdown(f"**Answer:** {feedback.comprehension_answer}")
+                    st.markdown(f"**Explanation:** {feedback.explanation}")
 
                 with tab7:
                     st.subheader("🔧 Improved Code")
-                    if isinstance(feedback, dict):
-                        st.code(feedback["code_fix"], language="python")
-                    else:
-                        st.code(feedback.improved_code, language="python")
-                        st.markdown("**What Changed:**")
-                        st.info(feedback.fix_explanation)
+                    st.code(feedback.improved_code, language="python")
+                    st.markdown("**What Changed:**")
+                    st.info(feedback.fix_explanation)
 
                 st.success(
                     "✅ Analysis complete! Review each tab for comprehensive feedback.")

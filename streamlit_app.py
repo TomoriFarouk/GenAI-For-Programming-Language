@@ -135,7 +135,7 @@ def main():
                             try:
                                 # Use Hugging Face Model Hub
                                 # Replace with your actual model name
-                                model_path = "TomoriFarouk/codellama-7b-programming-education"
+                                model_path = "FaroukTomori/codellama-7b-programming-education"
 
                                 # Check if we have HF token for private model
                                 if HF_TOKEN:

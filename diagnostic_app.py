@@ -71,7 +71,7 @@ else:
 
 # Check 5: Model path
 st.subheader("5. Model Path Configuration")
-model_path = "TomoriFarouk/codellama-7b-programming-education"
+model_path = "FaroukTomori/codellama-7b-programming-education"
 st.write(f"**Current model path:** {model_path}")
 st.info("💡 Make sure this matches your actual model name on Hugging Face")
 
@@ -159,7 +159,7 @@ if st.button("🚀 Test Model Loading"):
     if MODEL_AVAILABLE:
         with st.spinner("Testing model loading..."):
             try:
-                model_path = "TomoriFarouk/codellama-7b-programming-education"
+                model_path = "FaroukTomori/codellama-7b-programming-education"
                 ai_tutor = ProgrammingEducationAI(model_path)
                 st.success("✅ Model class instantiated successfully")
 

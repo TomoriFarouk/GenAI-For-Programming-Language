@@ -42,7 +42,7 @@ This will show you exactly what's missing!
 
 4. **Upload your model files:**
    ```bash
-   huggingface-cli upload TomoriFarouk/codellama-7b-programming-education \
+   huggingface-cli upload FaroukTomori/codellama-7b-programming-education \
      --include "*.safetensors" \
      --include "*.json" \
      --include "*.txt" \
@@ -93,7 +93,7 @@ If your model has a different name, update it in `streamlit_app.py`:
 
 ```python
 # Change this line to match your actual model name
-model_path = "TomoriFarouk/codellama-7b-programming-education"
+model_path = "FaroukTomori/codellama-7b-programming-education"
 ```
 
 ## 🧪 **Test Your Setup**

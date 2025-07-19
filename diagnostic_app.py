@@ -61,13 +61,9 @@ except Exception as e:
 
 # Check 4: Environment variables
 st.subheader("4. Environment Variables")
-HF_TOKEN = os.getenv("HF_TOKEN", None)
-if HF_TOKEN:
-    st.success("✅ HF_TOKEN found")
-    st.write(f"**Token starts with:** {HF_TOKEN[:10]}...")
-else:
-    st.warning("⚠️ HF_TOKEN not found")
-    st.info("💡 Add HF_TOKEN to your environment variables or HF Spaces secrets")
+HF_TOKEN = None  # Using public model
+st.success("✅ Using public model - no HF_TOKEN required")
+st.info("💡 Public models don't need authentication tokens")
 
 # Check 5: Model path
 st.subheader("5. Model Path Configuration")
@@ -127,10 +123,10 @@ else:
 # Summary and recommendations
 st.header("🎯 Summary & Recommendations")
 
-if MODEL_AVAILABLE and HF_TOKEN:
-    st.success("🎉 Everything looks good! Your model should work.")
+if MODEL_AVAILABLE:
+    st.success("🎉 Everything looks good! Your public model should work.")
     st.info("💡 Try using the full app now.")
-elif not MODEL_AVAILABLE:
+else:
     st.error("❌ Fine-tuned model components are not available")
     st.markdown("""
     **Possible causes:**
@@ -142,14 +138,6 @@ elif not MODEL_AVAILABLE:
     1. Make sure `fine.py` exists and is complete
     2. Install missing dependencies: `pip install torch transformers accelerate`
     3. Check for syntax errors in `fine.py`
-    """)
-elif not HF_TOKEN:
-    st.warning("⚠️ HF_TOKEN is missing")
-    st.markdown("""
-    **To fix this:**
-    1. Go to https://huggingface.co/settings/tokens
-    2. Create a new token
-    3. Add it to HF Spaces secrets as `HF_TOKEN`
     """)
 
 # Test model loading

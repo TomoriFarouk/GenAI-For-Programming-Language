@@ -20,8 +20,8 @@ try:
 except Exception as e:
     MODEL_AVAILABLE = False
 
-# Get HF token for private model access
-HF_TOKEN = os.getenv("HF_TOKEN", None)
+# Note: Using public model - no HF_TOKEN required
+HF_TOKEN = None  # Set to None for public model
 
 
 def demo_feedback(code_input):
@@ -78,7 +78,7 @@ def main():
             model_option = "Use Demo Mode"
             st.warning("⚠️ Fine-tuned model not available - using demo mode")
             st.info(
-                "💡 To enable AI model: Upload your model to HF Model Hub and add HF_TOKEN")
+                "💡 To enable AI model: Make sure your model is uploaded to HF Model Hub as public")
 
         student_level = st.selectbox(
             "Student Level:",
@@ -103,10 +103,7 @@ def main():
         # Show model status
         if MODEL_AVAILABLE:
             st.success("✅ Fine-tuned model available")
-            if HF_TOKEN:
-                st.success("✅ Authentication token found")
-            else:
-                st.warning("⚠️ No HF token - model must be public")
+            st.success("🌐 Using public model - no authentication required")
         else:
             st.error("❌ Fine-tuned model not available")
 
@@ -137,13 +134,9 @@ def main():
                                 # Replace with your actual model name
                                 model_path = "FaroukTomori/codellama-7b-programming-education"
 
-                                # Check if we have HF token for private model
-                                if HF_TOKEN:
-                                    st.info(
-                                        "🔐 Using private model with authentication...")
-                                else:
-                                    st.warning(
-                                        "⚠️ No HF token found - model must be public or token must be set")
+                                # Using public model - no authentication required
+                                st.info(
+                                    "🌐 Using public model - no authentication required")
 
                                 ai_tutor = ProgrammingEducationAI(model_path)
                                 ai_tutor.load_model()

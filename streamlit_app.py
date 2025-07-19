@@ -3,10 +3,42 @@ AI Programming Tutor - Hugging Face Spaces Deployment
 Comprehensive Educational Feedback System
 """
 
+import warnings
 import json
+import streamlit as st
 import os
 import gc
-import warnings
+import sys
+import tempfile
+import logging
+
+# Configure logging to avoid permission issues
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Set up environment for HF Spaces
+os.environ['STREAMLIT_SERVER_PORT'] = '8501'
+os.environ['STREAMLIT_SERVER_ADDRESS'] = '0.0.0.0'
+os.environ['STREAMLIT_SERVER_HEADLESS'] = 'true'
+os.environ['STREAMLIT_SERVER_ENABLE_CORS'] = 'false'
+os.environ['STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION'] = 'false'
+
+# Create temp directory for Streamlit cache
+try:
+    temp_dir = tempfile.mkdtemp()
+    os.environ['STREAMLIT_CACHE_DIR'] = temp_dir
+    os.environ['STREAMLIT_GLOBAL_DEVELOPMENT_MODE'] = 'false'
+except Exception as e:
+    logger.warning(f"Could not set up temp directory: {e}")
+
+# Configure page
+st.set_page_config(
+    page_title="AI Programming Tutor",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Environment setup for HF Spaces
@@ -393,4 +425,12 @@ def display_feedback(feedback: ComprehensiveFeedback):
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except PermissionError as e:
+        st.error(f"❌ Permission error: {e}")
+        st.info(
+            "💡 This is likely due to Hugging Face Spaces restrictions. Try refreshing the page.")
+    except Exception as e:
+        st.error(f"❌ Unexpected error: {e}")
+        st.info("💡 Please try refreshing the page or contact support.")
